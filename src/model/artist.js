@@ -1,69 +1,34 @@
-import { Model, string, arrayOf, instanceOf, shape, number } from 'phnq-lib';
+import { MongoModel, string, bool, instanceOf, arrayOf } from 'phnq-lib';
 import Tag from './tag';
-import Track from './track';
-import Album from './album';
-import Event from './event';
 
-const lastFMImgUrlRe = /\/i\/u\/([\dxs]*)\/[\d[a-f]*\.png$/;
-const lastFMImgDimRe = /(\d*)[sx](\d*)/;
+console.log('TAG', Tag);
 
-class Artist extends Model {
+class Artist extends MongoModel {
   static schema = {
-    id: string,
-    mbid: string,
+    mbid: string.isRequired,
+    sid: string,
     name: string.isRequired,
-    images: arrayOf(shape({ url: string, width: number, height: number })),
-    bio: string,
+    aliases: arrayOf(string),
+    ended: bool.isRequired,
+    type: string,
     tags: arrayOf(instanceOf(Tag)),
-    topTracks: arrayOf(instanceOf(Track)),
-    albums: arrayOf(instanceOf(Album)),
-    events: arrayOf(instanceOf(Event)),
+    beginDate: instanceOf(Date),
+    beginArea: string,
+    endDate: instanceOf(Date),
+    endArea: string,
+    bio: string,
   };
 
-  static spotify({ id, name, images = [] }) {
-    return new Artist({
-      name,
-      id,
-      images,
-    });
-  }
+  constructor(data) {
+    const props = { ...data };
+    if (data.beginDateYear) {
+      props.beginDate = new Date(Date.UTC(data.beginDateYear, data.beginDateMonth, data.beginDateDay));
+    }
+    if (data.endDateYear) {
+      props.endDate = new Date(Date.UTC(data.endDateYear, data.endDateMonth, data.endDateDay));
+    }
 
-  static lastFM({ mbid, name, bio = {}, image = [], match }) {
-    const images = image
-      .map(imgObj => {
-        const url = imgObj['#text'];
-        if (url) {
-          const [, dim] = url.match(lastFMImgUrlRe);
-          const [, w, h] = dim.match(lastFMImgDimRe);
-          return { url, width: w, height: h || w };
-        }
-        return null;
-      })
-      .filter(i => i !== null);
-
-    return new Artist({
-      mbid,
-      name,
-      bio: bio.content,
-      images,
-      match,
-    });
-  }
-
-  constructor(props) {
-    const p = props;
-
-    p.images = p.images || [];
-    p.images.sort((i1, i2) => i1.width - i2.width);
-
-    super(p);
-  }
-
-  image(minWidth = 0, minHeight = 0) {
-    const image =
-      this.images.find(img => img.width >= minWidth && img.height >= minHeight) || this.images[this.images.length - 1];
-
-    return (image || {}).url;
+    super(props);
   }
 }
 

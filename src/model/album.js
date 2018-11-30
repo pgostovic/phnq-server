@@ -2,6 +2,9 @@ import { Model, string, instanceOf, arrayOf, shape, number } from 'phnq-lib';
 import Artist from './artist';
 import Track from './track';
 
+console.log('TRACK', Track);
+console.log('Artist', Artist);
+
 class Album extends Model {
   static schema = {
     id: string,

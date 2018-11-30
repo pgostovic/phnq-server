@@ -1,4 +1,5 @@
 import md5 from 'md5';
+import elasticsearch from 'elasticsearch';
 import { SpotifyClient, LastFMClient, wikipedia, bandsintown, songkick } from 'phnq-lib';
 import PersistentCache from '../data/persistentCache';
 
@@ -64,6 +65,17 @@ export class State {
         sub.start(data);
       }
     });
+  }
+
+  get elasticsearchClient() {
+    let client = this.get('elasticsearchClient');
+    if (!client) {
+      client = elasticsearch.Client({
+        host: process.env.ES_HOST,
+      });
+      this.set('elasticsearchClient', client);
+    }
+    return client;
   }
 
   get lastFMClient() {

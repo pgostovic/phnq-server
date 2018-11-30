@@ -1,11 +1,18 @@
+const webpack = require('webpack');
 const path = require('path');
+const fs = require('fs');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 
 const analyzeBundle = process.env.ANALYZE_BUNDLE === 'true';
 
+const serviceTypes = fs
+  .readdirSync(path.resolve(__dirname, '../src/connection/services'))
+  .map(name => path.basename(name, '.js'));
+
 const config = {
   target: 'web',
   mode: 'production',
+  // mode: 'development',
   devtool: 'source-map',
 
   externals: {
@@ -19,8 +26,10 @@ const config = {
 
   output: {
     path: path.resolve(__dirname, '../clientApiGen'),
-    filename: 'api.js',
+    filename: 'phnqapi.js',
+    // library: 'api',
     libraryTarget: 'umd',
+    // jsonpFunction: 'apiLoaded',
     publicPath: '/',
   },
 
@@ -40,7 +49,11 @@ const config = {
     extensions: ['.js'],
   },
 
-  plugins: [],
+  plugins: [
+    new webpack.DefinePlugin({
+      __SERVICE_TYPES__: JSON.stringify(serviceTypes),
+    }),
+  ],
 };
 
 if (analyzeBundle) {

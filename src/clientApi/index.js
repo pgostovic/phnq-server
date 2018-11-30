@@ -1,50 +1,24 @@
 import WebSocket from 'isomorphic-ws';
 import prettyHrtime from 'pretty-hrtime';
-import { newLogger, hrtime } from 'phnq-lib';
-import { toModel } from '../model';
+import { newLogger, hrtime, deserialize } from 'phnq-lib';
+import models from '../model';
 
 const log = newLogger('phnq.api');
 
-const serviceTypes = [
-  'login',
-  'logout',
-  'authenticate',
-  'createAccount',
-  'setPassword',
-  'getTopArtists',
-  'getArtist',
-  'getArtist2',
-  'getSimilarArtists',
-  'getArtistImages',
-  'getArtistAlbums',
-  'getAlbum',
-  'getAlbumTags',
-  'getAlbumDescription',
-  'setSpotifyCode',
-  'getSpotifyProfile',
-  'connectSpotify',
-  'getTag',
-  'getRelatedTags',
-  'getMixes',
-  'getSuggestedArtists',
-  'pausePlayer',
-  'playTracks',
-  'getPlayer',
-  'subscribe',
-  'unsubscribe',
-  'searchArtists',
-  'spotifyGet',
-];
+const serviceTypes = __SERVICE_TYPES__;
+
+const apiScriptUrl = [...window.document.scripts].map(({ src }) => src).find(src => src.match(/\/phnqapi\.js$/));
+const apiWSUrl = apiScriptUrl.replace(/^http/, 'ws').replace(/\.js$/, '');
 
 const onErrors = [];
 
-export const onApiError = onError => {
+const onApiError = onError => {
   onErrors.push(onError);
 };
 
 let ons = [];
 
-export const api = {
+const api = {
   on(type, fn) {
     ons.push({ type, fn });
   },
@@ -86,7 +60,7 @@ const getSocket = async () => {
   }
 
   return new Promise((resolve, reject) => {
-    const s = new WebSocket('ws://localhost:9090/api');
+    const s = new WebSocket(apiWSUrl);
 
     s.addEventListener('open', () => {
       socket = s;
@@ -105,7 +79,8 @@ const getSocket = async () => {
 
     s.addEventListener('message', event => {
       const dataLen = event.data.length;
-      const { id, type, data } = JSON.parse(event.data);
+      console.log('DATA', JSON.parse(event.data));
+      const { id, type, data } = deserialize(event.data);
       const responseHandler = responseHandlers[id];
       if (responseHandler) {
         responseHandler(type, data, dataLen);
@@ -114,7 +89,7 @@ const getSocket = async () => {
           .filter(on => on.type === type)
           .forEach(on => {
             try {
-              on.fn(toModel(data));
+              on.fn(data);
             } catch (err) {
               log('Error handling notification: %O', err);
             }
@@ -127,7 +102,6 @@ const getSocket = async () => {
 serviceTypes.forEach(type => {
   Object.defineProperty(api, type, {
     value: async data => {
-      // if client...
       const start = hrtime();
       const s = await getSocket();
       const id = messageId.next().value;
@@ -137,7 +111,7 @@ serviceTypes.forEach(type => {
 
       log('%s %o -> %d bytes %o', prettyHrtime(hrtime(start)), msg, resp.dataLen, resp.data);
 
-      resp.data = toModel(resp.data);
+      // resp.data = toModel(resp.data);
 
       if (resp.type === 'response') {
         return resp.data;
@@ -164,4 +138,8 @@ class ApiError extends Error {
     this.type = type;
     Object.setPrototypeOf(this, ApiError.prototype);
   }
+}
+
+if (window.apiLoaded) {
+  window.apiLoaded(api, onApiError, models);
 }

@@ -26,7 +26,7 @@ if (process.env.NODE_ENV === 'production') {
 const server = http.createServer(app.callback());
 
 server.on('upgrade', (request, socket) => {
-  if (request.url !== '/api') {
+  if (request.url !== '/phnqapi') {
     socket.destroy();
   }
 });

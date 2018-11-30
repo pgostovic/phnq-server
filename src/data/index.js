@@ -2,7 +2,7 @@ import { Mongo, newLogger } from 'phnq-lib';
 import Account from '../model/account';
 import Session from '../model/session';
 import CacheEntry from '../model/cacheEntry';
-import MBArtist from '../model/mb/mbArtist';
+import Artist from '../model/artist';
 import MBRelease from '../model/mb/mbRelease';
 
 const log = newLogger('phnq.data');
@@ -24,7 +24,7 @@ export const init = async () => {
     await client.addModel(Account);
     await client.addModel(Session);
     await client.addModel(CacheEntry);
-    await client.addModel(MBArtist);
+    await client.addModel(Artist);
     await client.addModel(MBRelease);
 
     log('Initialized.');
