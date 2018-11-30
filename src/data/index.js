@@ -7,6 +7,12 @@ import MBRelease from '../model/mb/mbRelease';
 
 const log = newLogger('phnq.data');
 
+/**
+ * mongo -- docker (see below)
+ * elasticsearch -- homebrew
+ * postgresql -- homebrew
+ */
+
 // docker run --name pg-mongo -d -p 27017:27017 mongo:4
 // docker start pg-mongo
 // docker stop pg-mongo

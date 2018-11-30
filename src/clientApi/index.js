@@ -5,8 +5,6 @@ import models from '../model';
 
 const log = newLogger('phnq.api');
 
-console.log('ENC', encode);
-
 const serviceTypes = __SERVICE_TYPES__;
 
 const apiScriptUrl = [...window.document.scripts].map(({ src }) => src).find(src => src.match(/\/phnqapi\.js$/));
