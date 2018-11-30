@@ -1,9 +1,11 @@
 import WebSocket from 'isomorphic-ws';
 import prettyHrtime from 'pretty-hrtime';
-import { newLogger, hrtime, deserialize } from 'phnq-lib';
+import { newLogger, hrtime, deserialize, encode } from 'phnq-lib';
 import models from '../model';
 
 const log = newLogger('phnq.api');
+
+console.log('ENC', encode);
 
 const serviceTypes = __SERVICE_TYPES__;
 
@@ -79,7 +81,7 @@ const getSocket = async () => {
 
     s.addEventListener('message', event => {
       const dataLen = event.data.length;
-      console.log('DATA', JSON.parse(event.data));
+      // console.log('DATA', JSON.parse(event.data));
       const { id, type, data } = deserialize(event.data);
       const responseHandler = responseHandlers[id];
       if (responseHandler) {
@@ -106,7 +108,7 @@ serviceTypes.forEach(type => {
       const s = await getSocket();
       const id = messageId.next().value;
       const msg = { id, type, data };
-      s.send(JSON.stringify(msg));
+      s.send(encode(msg));
       const resp = await getResponse(id);
 
       log('%s %o -> %d bytes %o', prettyHrtime(hrtime(start)), msg, resp.dataLen, resp.data);

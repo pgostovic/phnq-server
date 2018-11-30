@@ -5,6 +5,7 @@ import compress from 'koa-compress';
 import dotenv from 'dotenv';
 import WebSocket from 'ws';
 import koaWebpack from 'koa-webpack';
+import { encode, decode } from 'phnq-lib';
 import Connection from './connection';
 import { init as initData } from './data';
 import webpackConfig from '../etc/webpack';
@@ -41,11 +42,11 @@ wss.on('connection', ws => {
   });
 
   conn.onMessage(message => {
-    ws.send(JSON.stringify(message));
+    ws.send(encode(message));
   });
 
   ws.on('message', message => {
-    conn.handle(JSON.parse(message));
+    conn.handle(decode(message));
   });
 
   ws.on('close', () => {
